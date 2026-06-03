@@ -1,18 +1,25 @@
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
+# Files to ignore
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
 
-# Other files and folders
-.settings/
+# Extensions to ignore - toggle on and off as required
+*.html
+# *.png
+# *.jpg
+# *.jpeg
+# *.eps
+# *.pdf
+# *.bmp
+# *.svg
+# *.tiff
+*.Rproj
 
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
+# Folders to ignore
+archive/
+output/
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+# Keywords to ignore
+*archive
