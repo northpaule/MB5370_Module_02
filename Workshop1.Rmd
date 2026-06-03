@@ -1,5 +1,5 @@
 ---
-title: "Workshops"
+title: "Workshop 01"
 author: "Paule Mathieu"
 date: "2026-06-03"
 output: html_document
