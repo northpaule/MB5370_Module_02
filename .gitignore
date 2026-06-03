@@ -8,7 +8,6 @@
 
 
 # Extensions to ignore - toggle on and off as required
-*.html 
 .png
 # *.jpg
 # *.jpeg
