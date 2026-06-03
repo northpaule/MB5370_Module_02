@@ -1,0 +1,13 @@
+---
+title: "Workshops"
+author: "Paule Mathieu"
+date: "2026-06-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+```
+

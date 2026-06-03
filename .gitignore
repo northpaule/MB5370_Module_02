@@ -4,6 +4,7 @@
 .RData
 .Ruserdata
 .DS_Store
+.R
 
 # Extensions to ignore - toggle on and off as required
 *.html
