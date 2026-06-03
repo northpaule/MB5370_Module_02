@@ -281,7 +281,19 @@ mass_se_plot
 ```
 # Since we are now working with standard error, our error bars are smaller (rightfully so). Plot 1 looks at the variation among individual penguins within each species-island group (stdev), whereas our Plot 2 measures the uncertainty around the estimated mean body mass (stder). Plot 2 suggests that the mean body masses are estimated with relatively high precision despite substantial variation among individual birds. Again, we can see that Gentoo penguins at Biscoe island have the highest body mass compared to the Gentoo penguins at Adelie island (and the other species in general too actually). Noteworthingly, the differences among islands within the same speices are smaller than the differences among species, which could suggest that species might have a stronger influence on body mass than island location. This observation could be due to a number of ecological factors such as feeding ecology, adaptations and available resources. The small error bars indicate that the observed differences in mean body mass are consistent within groups and are unlikely to be driven only by sampling variability. From here, I would do a two-way ANOVA to see whether body mass differs amongt species and/or islands (I personally preder to compare group means when possible, makes more sense for my brain so i'd stick with Plot 2).
 
+```{r}
+# Saving and exporting
+# Create output directories if they do not exist:
+#if (!dir.exists("outputs/figures")) dir.create("outputs/figures") # folder for figs
+#if (!dir.exists("outputs/tables")) dir.create("outputs/tables") # folder for tables
+#if (!dir.exists("Rdata")) dir.create("Rdata") # folder for Rdata objects
 
+# Saving plots (I still save them personally because I am built that way)
+#ggsave("outputs/mass_compare_plot.png", 
+       #plot = mass_compare_plot, 
+       #width = 120, height = 120, 
+       #units = "mm", dpi = 300)
+```
 
 
 
