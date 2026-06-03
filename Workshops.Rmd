@@ -162,7 +162,7 @@ print(biological_signal)
 ```
 # I now realise that that I should probably be doing my data clean up inside a R script and just source that clean one into a markdown, which I will make sure to do next time but it's okay.
 
-# Visualizing body size and shape
+# Challenge 1 - Visualizing body size and shape
 ```{r}
 # Summary table
 penguins |>
@@ -225,5 +225,65 @@ mass_compare_plot <- penguins |>
 
 mass_compare_plot
 ```
+# This figure is showing me that the Gentoo penguins at Biscoe island have a higher body mass than those at Adelie. I would probably do an ANOVA to see if that visual difference is significant or not, based on the error bars, its worth looking into.
+
+# Challenge 2
+```{r}
+# Summary table with standard error
+penguin_summary <- penguins |>
+  group_by(species, island) |>
+  summarise(
+    mean_mass = mean(body_mass_g, na.rm = TRUE),
+    sd_mass = sd(body_mass_g, na.rm = TRUE),
+    n = n(),
+    se_mass = sd_mass / sqrt(n),
+    .groups = "drop"
+  )
+
+penguin_summary
+```
+
+```{r}
+#Display table and figure together
+mass_se_plot <- penguin_summary |>
+  ggplot(aes(x = species, y = mean_mass, colour = island)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(
+      ymin = mean_mass - se_mass,
+      ymax = mean_mass + se_mass
+    ),
+    width = 0.2
+  ) +
+  scale_colour_manual(
+    name = "Penguin Island",
+    values = c(
+      "Biscoe" = "skyblue",
+      "Dream" = "purple",
+      "Torgersen" = "navy"
+    )
+  ) +
+  labs(
+    title = "Mean Body Mass by Species and Island",
+    subtitle = "Error bars represent standard error",
+    x = "Species",
+    y = "Mean Body Mass (g)"
+  ) +
+  theme_minimal()
+
+mass_se_plot
+```
+```{r}
+# Seeing both together
+#I know this could technically be the same if I had put both codes into my chunk, but I like having them separate when doing new things for the first time.
+penguin_summary
+mass_se_plot
+```
+# Since we are now working with standard error, our error bars are smaller (rightfully so). Plot 1 looks at the variation among individual penguins within each species-island group (stdev), whereas our Plot 2 measures the uncertainty around the estimated mean body mass (stder). Plot 2 suggests that the mean body masses are estimated with relatively high precision despite substantial variation among individual birds. Again, we can see that Gentoo penguins at Biscoe island have the highest body mass compared to the Gentoo penguins at Adelie island (and the other species in general too actually). Noteworthingly, the differences among islands within the same speices are smaller than the differences among species, which could suggest that species might have a stronger influence on body mass than island location. This observation could be due to a number of ecological factors such as feeding ecology, adaptations and available resources. The small error bars indicate that the observed differences in mean body mass are consistent within groups and are unlikely to be driven only by sampling variability. From here, I would do a two-way ANOVA to see whether body mass differs amongt species and/or islands (I personally preder to compare group means when possible, makes more sense for my brain so i'd stick with Plot 2).
+
+
+
+
+
 
 
