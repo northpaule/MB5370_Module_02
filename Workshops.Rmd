@@ -54,4 +54,176 @@ print(benthic_cover)
 
 #I can't really see the difference to be honest, feels very minor, but overall, should print and look at the data after manipulating it to make sure it is responding as it should, got it.
 ```
+```{r}
+# Install the data package
+#install.packages("palmerpenguins")
+
+# Load the package data into active memory
+library(palmerpenguins)
+data("penguins")
+
+# Examine the structure of the dataset - always do this when loading a new dataset!
+glimpse(penguins) # tidyverse version (from dplyr package)
+str(penguins) # base R version
+
+#I do love a good summary matrix
+```
+# Isolating attributes with select()
+```{r}
+# Vertically slice specific morphometric variables by explicit name
+morphology_metrics <- select(penguins, species, bill_length_mm, bill_depth_mm, body_mass_g)
+glimpse(morphology_metrics)
+
+# Retain a continuous block of attributes using the colon operator
+spatial_block <- select(penguins, species:island)
+
+# Discard logistics tracking attributes while preserving everything else using the minus sign
+clean_scientific_fields <- select(penguins, -year)
+```
+
+# Sifting rows with filter()
+```{r}
+# Isolate observations belonging to a single categorical target group
+adelie_cohort <- filter(penguins, species == "Adelie")
+
+# Sift out individuals using continuous numerical boundary thresholds
+# Preserves only large penguins whose mass exceeds 4500 grams
+heavy_penguins <- filter(penguins, body_mass_g > 4500)
+
+# Combine multiple conditional parameters across separate attributes
+# Preserves records matching Gentoo penguins sampled explicitly on Biscoe Island
+biscoe_gentoo <- filter(penguins, species == "Gentoo" & island == "Biscoe")
+
+# Sift records matching multiple targeting flags within an explicit set
+sub_islands <- filter(penguins, island %in% c("Dream", "Torgersen"))
+```
+
+# Ordering sequences with arrange()
+```{r}
+# Sort penguins by ascending body mass (Default setting: Smallest mass first)
+lightest_first <- arrange(penguins, body_mass_g)
+
+# Sort penguins in descending sequence using the desc() layout wrapper
+heaviest_first <- arrange(penguins, desc(body_mass_g))
+
+# Execute nested sorting criteria: Group by species, then sort by descending bill length
+stratified_morphology <- arrange(penguins, species, desc(bill_length_mm))
+#I often use a combination of all three depending on what my data looks like, or I will preemptively format my datasheet in a way that makes it more easy to use in R, before I start collecting. But that is not always possible.
+```
+
+# Using the Pipe
+```{r}
+penguins_subset <- mutate(penguins, bill_ratio = bill_length_mm / bill_depth_mm)
+penguins_final <- filter(penguins_subset, species == "Adelie")
+
+penguins_final <- penguins |>
+  mutate(bill_ratio = bill_length_mm / bill_depth_mm) |>
+  filter(species == "Adelie")
+#I have definitely used this before, this seems more direct tbh.
+```
+
+# Computing new attributes with mutate()
+```{r}
+# Calculate a new morphological ratio in our environment
+penguin_ratios <- penguins  |> 
+  mutate(body_mass_kg = body_mass_g / 1000,   # Convert grams to kilograms
+         bill_ratio = bill_length_mm / bill_depth_mm  # Bill ratio
+  )
+
+# View your newly engineered variables appended to the far-right columns
+glimpse(penguin_ratios)
+#I would still remove the NAs or replace them with 0 or something, cause it could cause problem in later statistical analysis.
+```
+```{r}
+# Grouping our active memory penguins by species
+grouped_penguins <- group_by(penguins, species)
+
+# Notice that the table looks identical, but metadata notes 'Groups: species [3]'
+print(grouped_penguins)
+
+# Collapsing the buckets into explicit summary metrics
+species_mass_summary <- summarise(grouped_penguins,
+  mean_mass_g = mean(body_mass_g)
+)
+
+print(species_mass_summary)
+```
+```{r}
+# Overcoming the missing value trap using na.rm = TRUE
+biological_signal <- penguins %>%
+  group_by(species, sex) %>%
+  summarise(
+    sample_size = n(),                                     # Count total individuals per category
+    mean_mass_g = mean(body_mass_g, na.rm = TRUE),         # Calculate mean ignoring missing cells
+    sd_mass_g   = sd(body_mass_g, na.rm = TRUE)            # Standard deviation calculation
+  )
+
+print(biological_signal)
+```
+# I now realise that that I should probably be doing my data clean up inside a R script and just source that clean one into a markdown, which I will make sure to do next time but it's okay.
+
+# Visualizing body size and shape
+```{r}
+# Summary table
+penguins |>
+  group_by(species, island) |>
+  summarise(
+    mean_body_mass = mean(body_mass_g, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Visualisation
+penguin_figure <- 
+  penguins |>
+  ggplot(aes(x = species, y = body_mass_g, fill = island)) +
+  geom_boxplot() +
+  scale_fill_manual(
+    name = "Penguin Island", 
+    values = c(
+      "Biscoe" = "skyblue",
+      "Dream" = "purple", 
+      "Torgersen" = "navy"
+    )
+  ) +
+  labs(
+    title = "Body Mass by Species and Island",
+    x = "Species",
+    y = "Body Mass (g)"
+  ) +
+  theme_minimal()
+```
+
+# Piping directly into visualization
+```{r}
+# Pipe directly from aggregation to plotting with error bars
+mass_compare_plot <- penguins |>
+  group_by(species, island) |>
+  summarise(
+    mean_mass = mean(body_mass_g, na.rm = TRUE),
+    sd_mass = sd(body_mass_g, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  ggplot(aes(x = species, y = mean_mass, colour = island)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_mass - sd_mass, 
+                    ymax = mean_mass + sd_mass), 
+                width = 0.2) +
+    scale_colour_manual(
+    name = "Penguin Island",
+    values = c(
+      "Biscoe" = "skyblue",
+      "Dream" = "purple",
+      "Torgersen" = "navy"
+    )
+  ) +
+  labs(title = "Mean Body Mass by Species and Island",
+       subtitle = "Error bars represent standard deviation",
+       y = "Mean Body Mass (g)",
+       x = "Species") +
+  theme_minimal()
+
+mass_compare_plot
+```
+
 
