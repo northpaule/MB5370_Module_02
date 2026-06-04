@@ -169,5 +169,126 @@ df |>
 ```
 
 ### 2.6 Pivoting exercises using palmer penguins
+```{r}
+library(palmerpenguins)
+#Create long version of penguins dataset
+penguins_long <- penguins %>%
+  pivot_longer(
+    cols = c(bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g), 
+    names_to = "measurement_type", 
+    values_to = "value"
+  )
+#View result
+head(penguins_long)
 
+#Visualizing
+penguins_long |>
+  drop_na(value) |>
+  ggplot(aes(x = value, fill = species)) +
+  geom_histogram(bins = 30, alpha = 0.7, colour = "black") +
+  facet_wrap(~ measurement_type, scales = "free_x") +
+  theme_minimal() +
+  labs(
+    title = "Morphometric distributions across penguin species",
+    x = "Measurement value",
+    y = "Frequency"
+  )
+
+```
+
+
+```{r}
+#Calculate the mean body mass for each species on each island using group_by() and summarise().
+mass_summary <- penguins |>
+  drop_na(body_mass_g) |>
+  group_by(species, island) |>
+  summarise(mean_mass = mean(body_mass_g))
+
+head(mass_summary)
+
+#Create wide version of penguins dataset
+mass_matrix <- mass_summary |>
+  pivot_wider(
+    names_from = island,    #dictates which column provides our new column headers (the islands)
+    values_from = mean_mass #dictates which column populates the cells beneath them (the mean mass)
+  )
+
+head(mass_matrix)
+
+```
+
+### 2.7 Separating and uniting data tables
+```{r}
+table3
+#Separate the rate column into cases and population using separate().
+table3 %>%
+  separate(rate, into = c("cases", "population"), sep = "/") #specify the separator as "/" since the rate column contains values in the format "cases/population"
+
+table3 %>% 
+  separate(rate, into = c("cases", "population"), convert = TRUE) #By setting convert = TRUE, we can automatically convert the separated values into appropriate data types (e.g., numeric) instead of keeping them as character strings.
+
+table3 %>% 
+  separate(year, into = c("century", "year"), sep = 2) #This makes this data less tidy. but it is an example of how to separate a column into two parts based on a specific position (after the first two characters) rather than a separator. The century column will contain the first two characters of the year, and the year column will contain the remaining characters. Which can be useful for certain analyses where you want to analyze trends by century or decade, but it does make the data less tidy since we now have two columns representing a single variable (year).
+
+```
+
+```{r}
+#To perform the inverse of separate() we will use unite() to combine multiple columns into a single column. In the example below for table5, we use unite() to rejoin century and year columns. unite() takes a data frame, the name of the new variable and a set of columns to combine using dplyr::select(). 
+
+table5 %>% 
+  unite(new, century, year, sep = "") #This combines the century and year columns into a single year column without any separator (sep = ""). The resulting year column will contain values like "1999" or "2000", which is more tidy and easier to work with for analyses that require a single year variable.
+```
+
+### 2.8 Wrangling strings and dates
+```{r}
+library(tidyverse)
+
+# A remarkably messy data frame of field sites
+messy_sites <- tibble(
+  site_id = c("Nelly Bay", "nelly_bay", "NELLY BAY", "Geoffrey_Bay", "geoffrey bay")
+)
+
+# Using stringr within mutate to standardize the text
+clean_sites <- messy_sites |>
+  mutate(
+    # 1. Convert everything to lowercase
+    site_clean = str_to_lower(site_id),
+    # 2. Replace any spaces with underscores
+    site_clean = str_replace_all(site_clean, pattern = " ", replacement = "_"),
+    # 3. Trim any leading or trailing whitespace (invisible spaces at the ends)
+    site_clean = str_trim(site_clean)
+  )
+
+print(clean_sites)
+
+```
+
+```{r}
+library(lubridate)
+
+# Parsing different date formats
+date_1 <- dmy("25/12/2026")
+date_2 <- ymd("2026-12-25")
+
+# R now recognizes these as identical Date objects
+date_1 == date_2
+
+# A tibble of raw sensor data with a messy character timestamp
+sensor_data <- tibble(
+  raw_time = c("14-05-2026 08:30:00", "14-05-2026 08:45:00", "14-05-2026 09:00:00"),
+  temperature = c(24.5, 24.6, 24.4)
+)
+
+# Converting character strings to true POSIXct datetime objects
+sensor_clean <- sensor_data |>
+  mutate(
+    true_time = dmy_hms(raw_time)
+  )
+
+print(sensor_clean)
+
+#This allows us to perform date-time operations, such as calculating time differences, extracting components (like year, month, day), and plotting time series data accurately.
+
+```
+### 2.9 Relational data: Joining tables
 
