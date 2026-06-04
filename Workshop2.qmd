@@ -74,6 +74,7 @@ ggplot(table1, aes(year, cases)) +
 ```
 
 ### 2.3 Lengthening datasets
+
 ```{r}
 #What does my data look like?
 billboard
@@ -113,6 +114,7 @@ df %>%
 ```
 
 ### 2.5 Widening datasets
+
 ```{r}
 cms_patient_experience
 
@@ -169,6 +171,7 @@ df |>
 ```
 
 ### 2.6 Pivoting exercises using palmer penguins
+
 ```{r}
 library(palmerpenguins)
 #Create long version of penguins dataset
@@ -196,7 +199,6 @@ penguins_long |>
 
 ```
 
-
 ```{r}
 #Calculate the mean body mass for each species on each island using group_by() and summarise().
 mass_summary <- penguins |>
@@ -218,6 +220,7 @@ head(mass_matrix)
 ```
 
 ### 2.7 Separating and uniting data tables
+
 ```{r}
 table3
 #Separate the rate column into cases and population using separate().
@@ -240,6 +243,7 @@ table5 %>%
 ```
 
 ### 2.8 Wrangling strings and dates
+
 ```{r}
 library(tidyverse)
 
@@ -290,5 +294,116 @@ print(sensor_clean)
 #This allows us to perform date-time operations, such as calculating time differences, extracting components (like year, month, day), and plotting time series data accurately.
 
 ```
+
 ### 2.9 Relational data: Joining tables
+```{r}
+# Table 1: Biological observation data
+observations <- tibble(
+  site_code = c("NB", "GB", "MI", "NB", "HB"),
+  species = c("Trout", "Snapper", "Trout", "Cod", "Trout"),
+  count = c(5, 2, 1, 3, 8)
+)
+
+
+# Table 2: Spatial metadata
+site_metadata <- tibble(
+  site_code = c("NB", "GB", "MI", "RP", "WP"),
+  zone = c("Marine National Park", "Conservation Park", "Habitat Protection", "General Use", "General Use"),
+  lat = c(-19.16, -19.15, -19.14, -19.12, -19.11)
+)
+
+#Joining metadata to our observations
+joined_data <- observations %>%
+  left_join(site_metadata, by = join_by(site_code))
+```
+
+```{r}
+#An inner_join() only keeps rows that have complete matches in both tables. If an observation occurs at a site that isn't listed in the metadata, that observation will be entirely dropped from the dataset. Use this when you only want to analyze data that has complete spatial or environmental context.
+matched_data <- observations |>
+  inner_join(site_metadata, by = join_by(site_code))
+glimpse(matched_data)
+
+# Which observations are missing from our metadata dictionary?
+missing_context <- observations |>
+  anti_join(site_metadata, by = join_by(site_code)) #anti_join() returns all rows from the first table (observations) that do not have a match in the second table (site_metadata). This allows us to identify which observations are missing spatial context and may need to be excluded from certain analyses or require additional data collection.) 
+
+```
+
+### 2.10 Handling missing values
+```{r}
+# Raw data from an old temperature logger
+logger_data <- tibble(
+  depth_m = c(10, 20, 30, 40),
+  temp_c = c(24.5, 24.1, -999, 23.5)) # -999 is a known sensor error code
+
+# Convert the -999 error codes to true NA values
+fixed_logger <- logger_data |>
+  mutate(temp_c = na_if(temp_c, -999))
+
+print(fixed_logger)
+
+#This allows us to perform accurate calculations and analyses without the influence of erroneous values. We can now calculate summary statistics, create visualizations, or apply models to the temperature data without worrying about the -999 values skewing our results.
+```
+
+```{r}
+# Simulate some count data
+shark_counts <- tibble(
+  site = c("Reef_A", "Reef_B", "Reef_C"),
+  shark_count = c(3, NA, 5)) # The NA here actually means 0 sharks were seen
+
+# Replace NA with 0 
+shark_fixed <- shark_counts |>
+  mutate(shark_count = coalesce(shark_count, 0))
+
+print(shark_fixed)
+
+
+```
+Bonus tip: coalesce() is incredibly powerful. If you have two columns, like a primary_sensor and a backup_sensor, coalesce(primary_sensor, backup_sensor) will automatically use the primary reading, but seamlessly fill in the gaps with the backup reading if the primary had failed!
+
+```{r}
+cpue_data <- tibble(
+  site = c("Bay_1", "Bay_2"),
+  catch = c(10, 0),
+  effort_hours = c(2, 0))
+
+# Calculating CPUE (catch / effort)
+cpue_calc <- cpue_data |>
+  mutate(
+    cpue = catch / effort_hours)
+
+print(cpue_calc)
+
+#if you need to specifically audit your data for mathematical errors without flagging standard missing data, you can isolate them using the is.nan() function.
+
+```
+
+```{r}
+raw_catch <- tibble(
+  site = c("Reef_1", "Reef_1", "Reef_2"),
+  species = c("Pmaculatus", "Pleopardus", "Pmaculatus"),
+  count = c(5, 2, 8))
+
+# Force inclusion of hidden zero-catch data
+full_catch_matrix <- raw_catch |>
+  complete(site, species, fill = list(count = 0))
+
+print(full_catch_matrix)
+
+```
+```{r}
+sensor_log <- tibble(
+  day = 1:4,
+  salinity = c(35.2, 35.1, NA, 35.3)
+)
+
+# Remove any row where salinity is missing
+clean_log <- sensor_log |>
+  drop_na(salinity)
+
+print(clean_log)
+```
+
+
+
 
