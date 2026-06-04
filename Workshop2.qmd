@@ -404,6 +404,52 @@ clean_log <- sensor_log |>
 print(clean_log)
 ```
 
+### 2.11 Practical exercises: Penguins, pivots and relational data
 
+#### Exercise 1: Cleaning the messy metadata
+```{r}
+# The messy metadata provided by your colleague
+island_metadata <- tibble(
+  island_name = c(" biscoe", "Dream ", "Torgersen"),
+  station_install = c("15/01/2003", "22-03-2004", "05/11/2001"),
+  latitude = c(-64.81, -64.73, -64.76)
+)
+
+print(island_metadata)
+```
+```{r}
+#Task: Create a new object called clean_metadata. Using mutate(), stringr, and lubridate, fix the island_name column so that it perfectly matches the island column in the penguins dataset (hint: watch out for those hidden spaces!). Then, convert the station_install column into a proper Date object.
+clean_metadata <- island_metadata |>
+  mutate(
+    island_name = str_trim(island_name), # Remove leading and trailing whitespace
+    station_install = dmy(station_install) # Convert to Date format
+  )
+print(clean_metadata)
+```
+
+#### Exercise 2: The relational join
+```{r}
+#Task: Create a new object called penguins_spatial. Use a left_join() to attach your clean_metadata to the main penguins dataset. Hint: Because the column containing the island names is called island in the penguins dataset, and island_name in your metadata, you will need to specify how they match using by = join_by(island == island_name).
+penguins_spatial <- penguins |>
+  left_join(clean_metadata, by = join_by(island == island_name))
+print(penguins_spatial)
+head(penguins_spatial)
+```
+
+#### Exercise 3: The wide summary matrix
+```{r}
+#Starting with your penguins_spatial dataset:
+  #Drop any missing values in the body_mass_g column.
+  #Group by species and island.
+  #Summarise the data to find the maximum body mass (max()).
+  #Pivot the dataset wider so that the species form the rows, and the islands form the columns.
+penguins_summary <- penguins_spatial |>
+  drop_na(body_mass_g) |>
+  group_by(species, island) |>
+  summarise(max_mass = max(body_mass_g)) |>
+  pivot_wider(names_from = island, values_from = max_mass)
+print(penguins_summary)
+head(penguins_summary)
+```
 
 
