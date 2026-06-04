@@ -31,16 +31,143 @@ knitr::opts_chunk$set(
 ```
 
 ## Introduction
-This workshop of *R for Marine Science* builds on fundational programming and data wrangling skills, focusing on extracting meaningful biological patterns from complex ecological datasets.
 
+This workshop of *R for Marine Science* builds on functional programming and data wrangling skills, focusing on extracting meaningful biological patterns from complex ecological datasets.
 
 ### Clear out environment
+
 ```{r housekeeping, message=FALSE, warning=FALSE, include=FALSE}
 rm(list=ls())
 ```
 
 ### Load packages
+
 ```{r packages, message=FALSE, warning=FALSE, include=FALSE}
 library(tidyverse)
+library(dplyr)
+library(ggplot2)
 ```
+
+### 2.2 Tidying data
+
+How we make our dataset tidy is by following three interrelated rules:
+
+\- Each variable must have its own column.
+
+\- Each observation must have its own row.
+
+\- Each value must have its own cell.
+
+```{r}
+# Compute rate per 10,000
+table1 %>% 
+  mutate(rate = cases / population * 10000)
+
+# Compute cases per year
+table1 %>% 
+  count(year, wt = cases)
+
+# Visualize changes over time
+ggplot(table1, aes(year, cases)) + 
+  geom_line(aes(group = country), colour = "grey50") + 
+  geom_point(aes(colour = country))
+```
+
+### 2.3 Lengthening datasets
+```{r}
+#What does my data look like?
+billboard
+#We've got a tibble of 317 rows and 79 columns, where each row represents a song and each column represents a week on the chart. The first 7 columns contain metadata about the songs, and the remaining columns contain the rank of the song for each week.
+
+#We want to pivot because actual data values (wk1, wk2 etc.) are in the column name, with each observation (row of data) being a song. We need to have the data in a format where each row is an observation (long format).
+
+#Pivoting the data
+billboard %>%
+  pivot_longer(
+    cols = starts_with("wk"), # Specify the columns to pivot
+    names_to = "week",        # Name of the new column for the week variable
+    values_to = "rank"       # Name of the new column for the rank variable
+  ) %>%
+  filter(!is.na(rank))       # Remove rows where rank is NA OR values_drop_na = TRUE
+
+```
+
+```{r}
+#Pivoting longer
+df <- tribble(
+  ~id,  ~bp1, ~bp2,
+   "A",  100,  120,
+   "B",  140,  115,
+   "C",  120,  125
+)
+
+#We want our new tidy dataset to have three variables: id, measurement (column name), and value (cell values).
+df %>%
+  pivot_longer(
+    cols = bp1:bp2, # Specify the columns to pivot
+    names_to = "measurement", # Name of the new column for the measurement variable
+    values_to = "value"      # Name of the new column for the value variable
+  )
+
+#Note: I have definitely done this before but in excel.
+```
+
+### 2.5 Widening datasets
+```{r}
+cms_patient_experience
+
+#We want to pivot wider because the data is in a long format where each row represents a patient experience, and we want to reshape it so that each row represents a unique patient with separate columns for each experience type.
+cms_patient_experience %>%
+  distinct(measure_cd, measure_title)
+
+cms_patient_experience %>%
+  pivot_wider(
+    names_from = measure_cd, # Specify the column to use for new column names
+    values_from = prf_rate   # Specify the column to use for new column values
+  )
+
+cms_patient_experience |> 
+  pivot_wider(
+    id_cols = starts_with("org"),
+    names_from = measure_cd,
+    values_from = prf_rate
+  ) #this looks ugly though... like the output is not visually pleasing
+```
+
+```{r}
+#Pivoting wider
+df <- tribble(
+  ~id, ~measurement, ~value,
+  "A",        "bp1",    100,
+  "B",        "bp1",    140,
+  "B",        "bp2",    115, 
+  "A",        "bp2",    120,
+  "A",        "bp3",    105
+)
+
+df %>%
+  pivot_wider(
+    names_from = measurement, # Specify the column to use for new column names
+    values_from = value      # Specify the column to use for new column values
+  )
+
+df |> 
+  distinct(measurement) |> 
+  pull()
+
+df |> 
+  select(-measurement, -value) |> 
+  distinct()
+
+#Combining both to create an empty data frame
+df |> 
+  select(-measurement, -value) |> 
+  distinct() |> 
+  mutate(x = NA, y = NA, z = NA)
+#Not sure what the goal of creating an empty dataset does, since we already succeeded in widening our dataset using pivot_wider()...
+
+```
+
+### 2.6 Pivoting exercises using palmer penguins
+
 
