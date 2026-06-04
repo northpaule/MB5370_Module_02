@@ -3,25 +3,60 @@ title: "Keystone"
 author: "Paule Mathieu"
 format: html
 editor: visual
+output: 
+ html_document:
+    code_folding: show
+    collapse: no
+    df_print: paged
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 10
+    highlight: textmate
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+editor_options: 
+  chunk_output_type: inline
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
+```{r setup, include=FALSE}
+# Set options, housekeeping
+knitr::opts_chunk$set(
+	echo = FALSE,
+	include = TRUE,
+	message = FALSE,
+	warning = FALSE)
 ```
 
-You can add options to executable code like this
+## Introduction
 
-```{r}
-#| echo: false
-2 * 2
+You have inherited a project from a former PhD student who was studying the relationship between water quality and predatory fish assemblages along the Ross River Estuary gradient. Unfortunately, their data management was entirely manual, and the files are a disaster.
+
+They left you with four separate datasets:
+
+1.  estuary_catch_log.xlsx: Handwritten field counts of fish species (using common names), spread across multiple spreadsheet tabs.
+2.  estuary_metadata.csv: The spatial coordinates and estuary zones for each site.
+3.  estuary_sonde_data.csv: High-frequency water quality sensor readings.
+4.  species_dictionary.csv: A taxonomic lookup table linking local common names to their accepted scientific names.
+
+Your mission is to write a single, reproducible R script (or .qmd) that ingests this mess, cleans it, joins it into a single master dataset, and produces a publication-ready visualisation of the estuary's ecology.
+
+### Clear out environment
+
+```{r housekeeping, message=FALSE, warning=FALSE, include=FALSE}
+rm(list=ls())
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+### Load packages
+
+```{r packages, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+### Load data
+```{r}
+
+```
+
