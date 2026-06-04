@@ -53,10 +53,17 @@ rm(list=ls())
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(readxl)
 ```
 
-### Load data
+### Load files
 ```{r}
-
+metadata <- read_csv("F:/Paule/MB5370/MB5370_Module_02/data/workshop2/estuary_metadata.csv")
 ```
 
+```{r}
+file_path <- ("F:/Paule/MB5370/MB5370_Module_02/data/workshop2/estuary_catch_log.xlsx")
+catch_data2 <- excel_sheets(file_path) %>%
+  map_dfr(~ read_excel(file_path, sheet = .x))
+```
+Note: So this is the wrong path? Because someone else could not access my data?
