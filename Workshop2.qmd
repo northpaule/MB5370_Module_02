@@ -24,7 +24,7 @@ editor_options:
 ```{r setup, include=FALSE}
 # Set options, housekeeping
 knitr::opts_chunk$set(
-	echo = FALSE,
+	echo = TRUE,
 	include = TRUE,
 	message = FALSE,
 	warning = FALSE)
