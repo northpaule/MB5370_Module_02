@@ -186,6 +186,9 @@ summary_stats_table <- master_dataset %>%
 ### Phase 5: Visual communication
 ```{r}
 #Create a publication-ready figure that shows fish abundance along the salinity gradient, formatted to professional publication standards.
+master_dataset <- master_dataset %>%
+  mutate(zone = factor(zone, levels = c("upstream", "middle", "downstream", "marine")))
+
 ggplot(master_dataset, aes(x = mean_salinity, y = count)) +
   geom_point(alpha = 0.4) +
   geom_smooth(method = "loess", se = TRUE, colour = "steelblue") +
@@ -201,6 +204,21 @@ ggplot(master_dataset, aes(x = mean_salinity, y = count)) +
     axis.text.x = element_text(face = "italic", angle = 45, hjust = 1)
   )
 
+ggplot(master_dataset, aes(x = mean_salinity, y = count, colour = zone)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess", se = TRUE, colour = "steelblue") +
+  facet_wrap(~ species) +
+  labs(
+    title = "Fish Abundance Along Salinity Gradient by Species",
+    x = "Mean Salinity (ppt)",
+    y = "Fish Abundance (Count)", 
+    colour = "Estuary Zone"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.text.x = element_text(face = "italic", angle = 45, hjust = 1)
+  )
 ```
 
 
