@@ -22,7 +22,7 @@ editor_options:
 ```{r setup, include=FALSE}
 # Set options, housekeeping
 knitr::opts_chunk$set(
-	echo = FALSE,
+	echo = TRUE,
 	include = TRUE,
 	message = FALSE,
 	warning = FALSE)
@@ -52,18 +52,118 @@ rm(list=ls())
 ```{r packages, message=FALSE, warning=FALSE, include=FALSE}
 library(tidyverse)
 library(dplyr)
+library(stringr)
 library(ggplot2)
 library(readxl)
 ```
 
 ### Load files
+
 ```{r}
-metadata <- read_csv("F:/Paule/MB5370/MB5370_Module_02/data/workshop2/estuary_metadata.csv")
+getwd()
+metadata <- read_csv("data/workshop2/estuary_metadata.csv")
 ```
 
 ```{r}
-file_path <- ("F:/Paule/MB5370/MB5370_Module_02/data/workshop2/estuary_catch_log.xlsx")
+file_path <- ("data/workshop2/estuary_catch_log.xlsx")
 catch_data2 <- excel_sheets(file_path) %>%
   map_dfr(~ read_excel(file_path, sheet = .x))
+
+catch1 <- read_excel("data/workshop2/estuary_catch_log.xlsx", sheet = 1)
+catch2 <- read_excel("data/workshop2/estuary_catch_log.xlsx", sheet = 2)
+catch3 <- read_excel("data/workshop2/estuary_catch_log.xlsx", sheet = 3)
+catch4 <- read_excel("data/workshop2/estuary_catch_log.xlsx", sheet = 4)
+
+catch_data <- bind_rows(catch1, catch2, catch3, catch4)
+
+sonde_data <- read_csv("data/workshop2/estuary_sonde_data.csv")
+species_dict <- read_csv("data/workshop2/species_dictionary.csv")
 ```
-Note: So this is the wrong path? Because someone else could not access my data?
+
+Note: We want our files to be accessible to the people we are going to share it to, so we have to make sure our file path are compatible. Since everything is in our repo anyway, our path starts from our data folder, not our project folder... So if I wanted to get the reef_cover_log.csv from our workshop1 folder which is in our data folder inside our MB5370_Module_02 folder, since our project is in MB5370_, we can start our path from data/workshop1/name of the file.
+
+### Phase 1: Ingestion and Decontamination
+```{r}
+#Cleaning catch_data.
+
+#We bound the 4 sheets of the catch log together using bind_rows() and stored it in catch_data (and catch_data2). We also imported the other files as separate data frames.
+
+#Standardize site and species names in the catch_data to lowercase with underscores so they match the metadata and species dictionary.
+catch_data <- catch_data %>%
+  mutate( #this means change x to y basically 
+    site = str_to_lower(site) %>% str_replace_all(" ", "_"),
+    species = str_to_lower(species) %>% str_replace_all(" ", "_"))
+
+#Standardize the species name to the scientific names in species_dict.
+catch_data <- catch_data %>%
+  left_join(species_dict, by = c("species" = "common_name")) %>%
+  mutate(species = scientific_name) %>%
+  select(-scientific_name)
+```
+
+```{r}
+#Cleaning metadata.
+
+#In the metadata file, standardize the column names (lowercase with " " as "_") and rename the site_name column to "site" to match the catch_data.Then standardize the names of the sites inside the rows of the site column to match the catch_data.
+metadata <- metadata %>%
+  rename(site = site_name) %>%
+  mutate(
+    site = str_to_lower(site) %>% str_replace_all(" ", "_"),
+    zone = str_to_lower(zone))
+```
+
+```{r}
+#Cleaning species_dict.
+
+#Standardize the species name inside the scientific_name column to lowercase with underscores.
+species_dict <- species_dict %>%
+  mutate(scientific_name = str_to_lower(scientific_name) %>% str_replace_all(" ", "_"))
+```
+
+```{r}
+#Cleaning sonde_data
+
+#Standardize the site names in the sonde_data to match the catch_data and metadata. I want them to be ordered by sites (so the same site names are together) and then by date (so the same dates are together).
+glimpse(sonde_data)
+head(sonde_data$timestamp)
+
+#Cleaning timestamp
+library(lubridate)
+sonde_data <- sonde_data %>%
+  mutate(
+    timestamp = dmy_hm(timestamp), #converting to day/month/year/time
+    turbidity = na_if(turbidity, -999.0), #replacing -999.0 with NA in turbidity column
+    salinity = ifelse(salinity < 0, NA, salinity)) %>% #replacing negative values in salinity with NA
+  rename(date = timestamp) %>%
+  arrange(site, date)
+```
+
+### Phase 2: The relational architecture
+```{r}
+#Summarizing water sensor data: Creating a daily summary table that calculates the mean temperature and salinity for each site on each day. (Hint: look at the floor_date() function to group by day).
+sonde_daily_summary <- sonde_data %>%
+  group_by(site, date = floor_date(date, unit = "day")) %>%
+  summarise(
+    mean_temperature = mean(temperature, na.rm = TRUE),
+    mean_salinity = mean(salinity, na.rm = TRUE)
+  ) %>%
+  ungroup()
+```
+
+Taxonomic translation was done during data cleaning.
+
+```{r}
+#The grand join: Merging the catch data with the metadata and the sonde daily summary to create a master dataset that contains the fish counts, site information, and daily water quality summaries. (Hint: you may need to use multiple join functions and ensure that the keys match across datasets).
+master_dataset <- catch_data %>%
+  left_join(metadata, by = "site") %>%
+  left_join(sonde_daily_summary, by = c("site", "date"))
+```
+
+### Phase 3: The zero-catch framework
+```{r}
+
+```
+
+
+
+
