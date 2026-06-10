@@ -131,11 +131,15 @@ head(sonde_data$timestamp)
 library(lubridate)
 sonde_data <- sonde_data %>%
   mutate(
-    timestamp = dmy_hm(timestamp), #converting to day/month/year/time
-    turbidity = na_if(turbidity, -999.0), #replacing -999.0 with NA in turbidity column
-    salinity = ifelse(salinity < 0, NA, salinity)) %>% #replacing negative values in salinity with NA
-  rename(date = timestamp) %>%
-  arrange(site, date)
+    date = dmy_hm(timestamp), #converting timestamp to date format
+    
+    temperature = na_if(temperature, -999.0), #replacing -999.0 with NA
+    salinity = na_if(salinity, -999.0), #replacing -999.0 with NA
+    turbidity = na_if(turbidity, -999.0), #replacing -999.0 with NA
+    
+    salinity = ifelse(salinity < 0, NA, salinity)) %>% #replacing negative salinity values with NA
+    select(-timestamp) %>% #removing the original timestamp column
+    arrange(site, date)
 ```
 
 ### Phase 2: The relational architecture
@@ -145,9 +149,8 @@ sonde_daily_summary <- sonde_data %>%
   group_by(site, date = floor_date(date, unit = "day")) %>%
   summarise(
     mean_temperature = mean(temperature, na.rm = TRUE),
-    mean_salinity = mean(salinity, na.rm = TRUE)
-  ) %>%
-  ungroup()
+    mean_salinity = mean(salinity, na.rm = TRUE),
+    .groups = "drop")
 ```
 
 Taxonomic translation was done during data cleaning.
@@ -161,9 +164,25 @@ master_dataset <- catch_data %>%
 
 ### Phase 3: The zero-catch framework
 ```{r}
-
+#Ensure that every species is represented at every site, on every sampling day. And replace the resulting NA values in the catch column with 0 using coalesce().
+master_dataset <- master_dataset %>%
+  complete(site, date, species, fill = list(count = 0))
 ```
 
+### Phase 4: Statistical extration
+```{r}
+#From your master dataset, generate a clean summary table showing the mean ± standard error of both the fish catch and the salinity for each scientific species across each estuary zone.
+summary_stats_table <- master_dataset %>%
+  group_by(zone, species) %>%
+  summarise(
+    mean_count = mean(count, na.rm = TRUE),
+    sd_count   = sd(count, na.rm = TRUE),
+    mean_salinity = mean(mean_salinity, na.rm = TRUE),
+    sd_salinity   = sd(mean_salinity, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+```
 
 
 
