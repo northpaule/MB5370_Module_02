@@ -181,8 +181,26 @@ summary_stats_table <- master_dataset %>%
     sd_salinity   = sd(mean_salinity, na.rm = TRUE)
   ) %>%
   ungroup()
-
 ```
 
+### Phase 5: Visual communication
+```{r}
+#Create a publication-ready figure that shows fish abundance along the salinity gradient, formatted to professional publication standards.
+ggplot(master_dataset, aes(x = mean_salinity, y = count)) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "loess", se = TRUE, colour = "steelblue") +
+  facet_wrap(~ species) +
+  labs(
+    title = "Fish Abundance Along Salinity Gradient by Species",
+    x = "Mean Salinity (ppt)",
+    y = "Fish Abundance (Count)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.text.x = element_text(face = "italic", angle = 45, hjust = 1)
+  )
+
+```
 
 
