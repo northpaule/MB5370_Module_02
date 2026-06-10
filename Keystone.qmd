@@ -221,4 +221,102 @@ ggplot(master_dataset, aes(x = mean_salinity, y = count, colour = zone)) +
     plot.title = element_text(face = "bold", hjust = 0.5),
     axis.text.x = element_text(face = "italic", angle = 45, hjust = 1)
   )
+  
 ```
+
+```{r}
+#Trying different plots to find most suitable.
+plot_data <- master_dataset %>%
+  group_by(species, zone) %>%
+  summarise(
+    mean_count = mean(count, na.rm = TRUE),
+    se_count = sd(count, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+#Mean and standard error plot
+ggplot(plot_data,
+       aes(x = zone, y = mean_count)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    aes(ymin = mean_count - se_count,
+        ymax = mean_count + se_count),
+    width = 0.15
+  ) +
+  facet_wrap(~ species) +
+  labs(
+    x = "Estuary Zone",
+    y = "Mean Fish Abundance"
+  ) +
+  theme_bw() +
+  theme(
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold"),
+    panel.grid = element_blank()
+  )
+
+#Boxplot without outliers
+ggplot(master_dataset,
+       aes(x = zone, y = count)) +
+  geom_boxplot(outlier.shape = NA) +
+  facet_wrap(~ species) +
+  labs(
+    x = "Estuary Zone",
+    y = "Fish Abundance"
+  ) +
+  theme_bw() +
+  theme(
+    panel.grid = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold")
+  )
+
+#Boxplot with mean and standard error
+ggplot(master_dataset,
+       aes(x = zone, y = count)) +
+  geom_boxplot(width = 0.6) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 18,
+    size = 3,
+    colour = "red"
+  ) +
+  stat_summary(
+    fun.data = mean_se,
+    geom = "errorbar",
+    width = 0.15,
+    colour = "red"
+  ) +
+  facet_wrap(~ species) +
+  labs(
+    x = "Estuary Zone",
+    y = "Fish Abundance"
+  ) +
+  theme_bw()
+
+```
+```{r}
+#Ideal plot?
+plot_data <- master_dataset %>%
+  filter(!is.na(zone))
+
+ggplot(plot_data,
+       aes(x = zone, y = count)) +
+  geom_boxplot(width = 0.7, outlier.shape = 16,
+    outlier.size = 1.5) +
+  facet_wrap(~ species) +
+  labs(
+    x = "Estuary Zone (ppt)",
+    y = "Mean Fish Abundance") +
+  theme_bw() +
+  theme(
+    panel.grid = element_blank(),
+    strip.background = element_rect(
+      fill = "grey90",
+      colour = "black"),
+    strip.text = element_text(
+      face = "italic",
+      size = 10))
+```
+
