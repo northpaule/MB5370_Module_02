@@ -10,7 +10,7 @@
 # Extensions to ignore - toggle on and off as required
 .png
 .jpg
-# *.jpeg
+.jpeg
 # *.eps
 # *.pdf
 # *.bmp
