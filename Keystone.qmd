@@ -41,15 +41,13 @@ They left you with four separate datasets:
 
 Your mission is to write a single, reproducible R script (or .qmd) that ingests this mess, cleans it, joins it into a single master dataset, and produces a publication-ready visualisation of the estuary's ecology.
 
-### Clear out environment
-
 ```{r housekeeping, message=FALSE, warning=FALSE, include=FALSE}
+#Clear out environment
 rm(list=ls())
 ```
 
-### Load packages
-
 ```{r packages, message=FALSE, warning=FALSE, include=FALSE}
+#Load packages
 library(tidyverse)
 library(dplyr)
 library(stringr)
@@ -60,7 +58,6 @@ library(readxl)
 ### Load files
 
 ```{r}
-getwd()
 metadata <- read_csv("data/workshop2/estuary_metadata.csv")
 ```
 
@@ -80,9 +77,10 @@ sonde_data <- read_csv("data/workshop2/estuary_sonde_data.csv")
 species_dict <- read_csv("data/workshop2/species_dictionary.csv")
 ```
 
-Note: We want our files to be accessible to the people we are going to share it to, so we have to make sure our file path are compatible. Since everything is in our repo anyway, our path starts from our data folder, not our project folder... So if I wanted to get the reef_cover_log.csv from our workshop1 folder which is in our data folder inside our MB5370_Module_02 folder, since our project is in MB5370_, we can start our path from data/workshop1/name of the file.
+Note: We want our files to be accessible to the people we are going to share it to, so we have to make sure our file path are compatible. Since everything is in our repo anyway, our path starts from our data folder, not our project folder... So if I wanted to get the reef_cover_log.csv from our workshop1 folder which is in our data folder inside our MB5370_Module_02 folder, since our project is in MB5370\_, we can start our path from data/workshop1/name of the file.
 
 ### Phase 1: Ingestion and Decontamination
+
 ```{r}
 #Cleaning catch_data.
 
@@ -143,6 +141,7 @@ sonde_data <- sonde_data %>%
 ```
 
 ### Phase 2: The relational architecture
+
 ```{r}
 #Summarizing water sensor data: Creating a daily summary table that calculates the mean temperature and salinity for each site on each day. (Hint: look at the floor_date() function to group by day).
 sonde_daily_summary <- sonde_data %>%
@@ -163,6 +162,7 @@ master_dataset <- catch_data %>%
 ```
 
 ### Phase 3: The zero-catch framework
+
 ```{r}
 #Ensure that every species is represented at every site, on every sampling day. And replace the resulting NA values in the catch column with 0 using coalesce().
 master_dataset <- master_dataset %>%
@@ -170,6 +170,7 @@ master_dataset <- master_dataset %>%
 ```
 
 ### Phase 4: Statistical extration
+
 ```{r}
 #From your master dataset, generate a clean summary table showing the mean ± standard error of both the fish catch and the salinity for each scientific species across each estuary zone.
 summary_stats_table <- master_dataset %>%
@@ -184,6 +185,7 @@ summary_stats_table <- master_dataset %>%
 ```
 
 ### Phase 5: Visual communication
+
 ```{r}
 #Create a publication-ready figure that shows fish abundance along the salinity gradient, formatted to professional publication standards.
 master_dataset <- master_dataset %>%
@@ -220,5 +222,3 @@ ggplot(master_dataset, aes(x = mean_salinity, y = count, colour = zone)) +
     axis.text.x = element_text(face = "italic", angle = 45, hjust = 1)
   )
 ```
-
-
